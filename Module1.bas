@@ -1,7 +1,6 @@
 Attribute VB_Name = "Module1"
 Sub MyButton()
 
-Application.AskToUpdateLinks = False
 Application.EnableEvents = False
 Application.DisplayAlerts = False
 
@@ -10,7 +9,7 @@ Application.DisplayAlerts = False
 Dim lastrow As Long, lastcol As Long, last As Long, newlast As Long, flast As Long, dlast As Long, nlast As Long
 Dim rng As Range, Rng1 As Range
 Dim t As Integer
-Dim m As Integer, n As Integer
+Dim M As Integer, n As Integer
 
 'Captures username of system running macro
 Dim name As String
@@ -56,7 +55,8 @@ Do While file <> "" 'loop begins, and continues until there are no files left
 
 'checking file status against tracker
 Dim trk As Workbook
-Set trk = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
+'Set trk = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
+Set trk = Workbooks.Open("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
 
 nlast = trk.Sheets("Assign").Cells(trk.Sheets("Assign").Rows.count, 1).End(xlUp).Row
 
@@ -123,12 +123,12 @@ Else: End If
 'Find column number with unique identifier
 For i = 1 To lastcol
 If a.Sheets("Sheet1").Cells(1, i) = "ID" Then
-m = i
+M = i
 Else: End If
 Next
 
 'Check to ensure file has unique identifier column which defines each record
-If m = 0 Then
+If M = 0 Then
 MsgBox ("Please ensure that your file has a unique identifier column before running the code")
 GoTo complete
 Else: End If
@@ -178,19 +178,19 @@ For i = 1 To last
 
 If .Cells(i, 10) = "3" And .Cells(i, 11) <> " " And IsEmpty(.Cells(i, 11)) = False Then
 verror = verror + 1
-verr(w) = a.Sheets("Sheet2").Cells(i, m)
+verr(w) = a.Sheets("Sheet2").Cells(i, M)
 w = w + 1
 Else: End If
 
 If .Cells(i, 10) = "1" And IsEmpty(.Cells(i, 11)) = True Then
 derror = derror + 1
-derr(s) = a.Sheets("Sheet2").Cells(i, m)
+derr(s) = a.Sheets("Sheet2").Cells(i, M)
 s = s + 1
 Else: End If
 
 If .Cells(i, 10) = "" Or IsEmpty(.Cells(i, 10)) = True Then
 berror = berror + 1
-berr(u) = a.Sheets("Sheet2").Cells(i, m)
+berr(u) = a.Sheets("Sheet2").Cells(i, M)
 u = u + 1
 Else: End If
 
@@ -202,7 +202,7 @@ If w > 0 Then
 
 For j = 2 To lastrow
 For k = 0 To w
-If a.Sheets("Sheet1").Cells(j, m) = verr(k) Then
+If a.Sheets("Sheet1").Cells(j, M) = verr(k) Then
 a.Sheets("Sheet1").Cells(j, 10).Interior.ColorIndex = 3
 Else: End If
 Next k
@@ -214,7 +214,7 @@ If s > 0 Then
 
 For j = 2 To lastrow
 For k = 0 To s
-If a.Sheets("Sheet1").Cells(j, m) = derr(k) Then
+If a.Sheets("Sheet1").Cells(j, M) = derr(k) Then
 a.Sheets("Sheet1").Cells(j, 10).Interior.ColorIndex = 3
 Else: End If
 Next k
@@ -226,7 +226,7 @@ If u > 0 Then
 
 For j = 2 To lastrow
 For k = 0 To u
-If a.Sheets("Sheet1").Cells(j, m) = berr(k) Then
+If a.Sheets("Sheet1").Cells(j, M) = berr(k) Then
 a.Sheets("Sheet1").Cells(j, 10).Interior.ColorIndex = 3
 Else: End If
 Next k
@@ -253,13 +253,12 @@ Else: End If
 
 'Open data dump
 Dim b As Workbook
-Set b = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\Asin Exclusions - New Workflow\OPS\Ops associate-wise dumps\" & dashname & "_ASIN Dump.xlsm")
+'Set b = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops associate-wise dumps\" & dashname & "_ASIN Dump.xlsm")
+Set b = Workbooks.Open("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops associate-wise dumps\" & dashname & "_ASIN Dump.xlsm")
 
 b.Sheets("Sheet1").Unprotect "Data1104"
 
 newlast = b.Sheets("Sheet1").Cells(b.Sheets("Sheet1").Rows.count, 1).End(xlUp).Row
-
-If b.Sheets("Sheet1").Cells(newlast, 2) = part Then
 
 'Find count of duplicate values from dump
 Dim dup As Integer
@@ -267,13 +266,11 @@ dup = 0
 
 For i = 1 To last
 For j = 2 To newlast
-If Int(a.Sheets("Sheet2").Cells(i, m)) = Int(b.Sheets("Sheet1").Cells(j, m)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
+If Int(a.Sheets("Sheet2").Cells(i, M)) = Int(b.Sheets("Sheet1").Cells(j, M)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
 dup = dup + 1
 Else: End If
 Next j
 Next i
-
-
 
 newlast = newlast + 1
 
@@ -285,19 +282,15 @@ With a.Sheets("Sheet2").UsedRange
         .Rows.count, .Columns.count) = .Value
 End With
 
-End If
-
 errline:
 
 On Error GoTo 0
-
-If b.Sheets("Sheet1").Cells(newlast - 1, 2) = part Then
 
 If newlast <= 3500 Then
 
 For i = 1 To last
 For j = 2 To newlast
-If Int(a.Sheets("Sheet2").Cells(i, m)) = Int(b.Sheets("Sheet1").Cells(j, m)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
+If Int(a.Sheets("Sheet2").Cells(i, M)) = Int(b.Sheets("Sheet1").Cells(j, M)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
 If Int(b.Sheets("Sheet1").Cells(j, 18)) <> Int(end_d) Then
 b.Sheets("Sheet1").Rows(j).Delete
 Else: End If
@@ -309,7 +302,7 @@ ElseIf newlast > 3500 Then
 
 For i = 1 To last
 For j = (newlast - 2000) To newlast
-If Int(a.Sheets("Sheet2").Cells(i, m)) = Int(b.Sheets("Sheet1").Cells(j, m)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
+If Int(a.Sheets("Sheet2").Cells(i, M)) = Int(b.Sheets("Sheet1").Cells(j, M)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
 If Int(b.Sheets("Sheet1").Cells(j, 18)) <> Int(end_d) Then
 b.Sheets("Sheet1").Rows(j).Delete
 Else: End If
@@ -319,9 +312,7 @@ Next i
 
 Else: End If
 
-Else: End If
-
-b.Sheets("Sheet1").UsedRange.RemoveDuplicates Columns:=Array(2, m), Header:=xlYes 'removes duplicate records from test
+b.Sheets("Sheet1").UsedRange.RemoveDuplicates Columns:=Array(2, M), Header:=xlYes 'removes duplicate records from test
 
 b.Sheets("Sheet1").Protect "Data1104"
 
@@ -332,7 +323,8 @@ a.Sheets("Sheet2").Delete
 'Opens tracker to note details of upload
 Dim c As Workbook
 Application.EnableEvents = False
-Set c = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
+'Set c = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
+Set c = Workbooks.Open("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
 Application.EnableEvents = True
 
 c.Sheets("Upload").Unprotect "Prod1104"
@@ -416,7 +408,8 @@ a.Close
 
 'Moves completed file to location on shared drive for next step of process
 srcfile = "C:\Users\" & name & "\Desktop\ASIN Uploads\" & file
-FileCopy srcfile, "\\ant\dept-as\Hyd11\Localization\Exclusions\Asin Exclusions - New Workflow\OPS\QC Pending\" & file
+'FileCopy srcfile, "\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\QC Pending\" & file
+FileCopy srcfile, "\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\QC Pending\" & file
 
 MsgBox ("You've successfully completed and uploaded your file!")
 
