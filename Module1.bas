@@ -5,7 +5,7 @@ Application.AskToUpdateLinks = False
 Application.EnableEvents = False
 Application.DisplayAlerts = False
 
-'On Error GoTo Err_Log
+
 
 Dim lastrow As Long, lastcol As Long, last As Long, newlast As Long, flast As Long, dlast As Long, nlast As Long
 Dim rng As Range, Rng1 As Range
