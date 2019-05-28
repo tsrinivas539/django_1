@@ -5,7 +5,7 @@ Application.AskToUpdateLinks = False
 Application.EnableEvents = False
 Application.DisplayAlerts = False
 
-
+'On Error GoTo Err_Log
 
 Dim lastrow As Long, lastcol As Long, last As Long, newlast As Long, flast As Long, dlast As Long, nlast As Long
 Dim rng As Range, Rng1 As Range
@@ -45,7 +45,7 @@ Dim derr(10000) As String
 Dim aerr(10000) As String
 
 Dim extn As Variant, x As Variant
-
+    
 extn = Array("*.xlsx", "*.xlsm") 'setting file extension
 
 For t = 0 To 1
@@ -92,9 +92,9 @@ Next i
 If Not exists Then
     a.Worksheets.Add.name = "Sheet2"
 End If
-
+    
 a.Sheets("Sheet2").Cells.Clear 'empties contents of Sheet 2
-
+  
 a.Sheets("Sheet1").Activate
 
 a.Sheets("Sheet1").Rows.Hidden = False 'unhide all rows and columns
@@ -136,7 +136,7 @@ Else: End If
     Dim xyz As Integer
 
     a.Sheets("Sheet2").Cells.Clear 'empties contents of Sheet 2
-
+    
     Set rng = a.Sheets("Sheet1").Range(Cells(1, 1), Cells(lastrow, lastcol))
     xyz = Application.WorksheetFunction.CountIf(rng, end_d)
     rng.AutoFilter Field:=18, Criteria1:="<>", Operator:=xlAnd, Criteria2:=end_d
@@ -149,7 +149,7 @@ Else: End If
     Application.CutCopyMode = False
     rng.AutoFilter
 
-
+    
 last = a.Sheets("Sheet2").Cells(a.Sheets("Sheet2").Rows.count, 1).End(xlUp).Row
 
 Dim fname, sname As String
@@ -280,13 +280,13 @@ newlast = newlast + 1
 On Error GoTo errline
 
 With a.Sheets("Sheet2").UsedRange
-
+   
   b.Sheets("Sheet1").Range("A" & newlast).Resize( _
         .Rows.count, .Columns.count) = .Value
 End With
-
+     
 End If
-
+     
 errline:
 
 On Error GoTo 0
@@ -294,7 +294,7 @@ On Error GoTo 0
 If b.Sheets("Sheet1").Cells(newlast - 1, 2) = part Then
 
 If newlast <= 3500 Then
-
+          
 For i = 1 To last
 For j = 2 To newlast
 If Int(a.Sheets("Sheet2").Cells(i, m)) = Int(b.Sheets("Sheet1").Cells(j, m)) And a.Sheets("Sheet2").Cells(i, 2) = b.Sheets("Sheet1").Cells(j, 2) Then
@@ -358,7 +358,7 @@ flast = c.Sheets("Upload").Cells(c.Sheets("Upload").Rows.count, 1).End(xlUp).Row
 If flast <> 0 Then
 flast = flast + 1
 Else: End If
-
+ 
 finishtime = TimeValue(Now())
 
 'Calculates duration of macro runtime
@@ -374,7 +374,7 @@ c.Sheets("Upload").Cells(flast, 7) = Format(end_t, "hh:mm:ss") 'upload time capt
 c.Sheets("Upload").Cells(flast, 8) = end_d
 c.Sheets("Upload").Cells(flast, 9) = 0 'count of unique records uploaded captured
 c.Sheets("Upload").Cells(flast, 10) = Format(dur, "hh:mm:ss") 'macro runtime duration captured
-
+    
 c.Save
 
 Dim sumval As Integer
@@ -435,7 +435,7 @@ c.Close
 
 Application.DisplayAlerts = False 'deletes temp sheet 2
 'a.Sheets("Sheet2").Delete
-
+       
 finish:
 a.Save 'saves and closes the file
 a.Close
@@ -460,7 +460,7 @@ Application.DisplayAlerts = False 'deletes temp sheet 2
 final1:
 
 a.Sheets("Sheet2").Delete
-
+                
 a.Save 'saves and closes the file
 a.Close
 
@@ -493,3 +493,8 @@ Application.DisplayAlerts = True
 Application.EnableEvents = True
 
 End Sub
+
+
+
+
+
