@@ -1,13 +1,10 @@
-Attribute VB_Name = "Module10"
-Sub GetMyFile_Ops()
-
-       ' ThisWorkbook.Save
+Sub myfileTowork()
 
         Server_Name = "IN-HY11-PBKMKX7" ' Enter your server name here
         Database_Name = "daily_task_1" ' Enter your database name here
         Emp_ID_SR = "root" ' enter your user ID here
         Password1 = "Studios2017" ' Enter your Password1 here
-        
+
         Set cn = New ADODB.Connection
         cn.Open "Driver={MySQL ODBC 5.3 Unicode Driver};Server=" & Server_Name & ";Database=" & Database_Name & _
         ";Uid=" & Emp_ID_SR & ";Pwd=" & Password1 & ";"
@@ -24,6 +21,33 @@ dashname = Left(ThisWorkbook.name, Len(ThisWorkbook.name) - 5)
 
 Dim i As Integer
 
+'qc tracker check
+Dim ctrk As Workbook
+'Set ctrk = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\QC\Audit Tracker\" & dashname & "_ASIN QC Tracker.xlsm")
+Set ctrk = Workbooks.Open("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\QC\Audit Tracker\" & dashname & "_ASIN QC Tracker.xlsm")
+
+Dim cnewlast As Long
+cnewlast = ctrk.Sheets("Assign").Cells(ctrk.Sheets("Assign").Rows.count, 1).End(xlUp).Row
+
+For i = 2 To cnewlast
+On Error Resume Next
+If ctrk.Sheets("Assign").Cells(i, 1) = name Then
+If ctrk.Sheets("Assign").Cells(i, 13) = "QC Assigned" Then
+ctrk.Close
+MsgBox ("You seem to have a QC file assigned to you. Please complete the same before downloading an ops file!")
+GoTo final
+Else: End If
+Else: End If
+Next
+
+Dim cnewlast2 As Long
+cnewlast2 = ctrk.Sheets("Upload").Cells(ctrk.Sheets("Upload").Rows.count, 1).End(xlUp).Row
+
+rec_up_time_QC = ctrk.Sheets("Upload").Cells(cnewlast2, 7).Value
+rec_up_date_QC = ctrk.Sheets("Upload").Cells(cnewlast2, 5).Value
+
+ctrk.Close
+
 'Opens ops tracker
 Dim trk As Workbook
 'Set trk = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\OPS\Ops Tracker\" & dashname & "_ASIN Tracker.xlsm")
@@ -32,261 +56,170 @@ Set trk = Workbooks.Open("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas
 Dim newlast As Long
 newlast = trk.Sheets("Assign").Cells(trk.Sheets("Assign").Rows.count, 1).End(xlUp).Row
 
-'defining language order for assigning
+
+'checks to ensure there are no pending files
+For i = 2 To newlast
+On Error Resume Next
+If trk.Sheets("Assign").Cells(i, 1) = name Then
+If trk.Sheets("Assign").Cells(i, 8) <> "QC Pending" Then
+trk.Save
+'trk.Close
+MsgBox ("Please complete the pending Ops file before downloading another one!")
+GoTo final
+Else: End If
+Else: End If
+Next
+
+Dim newlast2 As Long
+newlast2 = trk.Sheets("Upload").Cells(trk.Sheets("Upload").Rows.count, 1).End(xlUp).Row
+
+rec_up_time_OPs = trk.Sheets("Upload").Cells(newlast2, 7).Value
+rec_up_date_OPs = trk.Sheets("Upload").Cells(newlast2, 5).Value
+
+trk.Close
+
+
+
+Dim dtrk As Workbook
+Set dtrk = Workbooks.Open("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\Asin Exclusions - New Workflow\TBM\TBM_Trackers\" & dashname & "_ASIN TBM Tracker.xlsm")
+
+newlast = dtrk.Sheets("Assign").Cells(trk.Sheets("Assign").Rows.count, 1).End(xlUp).Row
+
+
+'checks to ensure there are no pending files
+For i = 2 To newlast
+On Error Resume Next
+If dtrk.Sheets("Assign").Cells(i, 1) = name Then
+If dtrk.Sheets("Assign").Cells(i, 8) <> "QC Pending" Then
+dtrk.Close
+MsgBox ("You seem to have a manual Eyeball file assigned to you. Please complete the same before downloading another one!")
+GoTo final
+Else: End If
+Else: End If
+Next
+
+dtrk.Close
+
+
 Dim langlast As Long
 langlast = ThisWorkbook.Sheets("Language").Cells(ThisWorkbook.Sheets("Language").Rows.count, 1).End(xlUp).Row
 
-Dim src_path As String
-Dim dest_path As String
-Dim path As String
-Dim fldr As FileDialog
-Dim srcfile As String
-
-  Date_1 = Date
-  dest_path = "C:\Users\" & name & "\Desktop\ASIN Uploads\"
-  If dest_path = "" Then GoTo final
-    
-Dim now_day As String
-now_day = UCase(Left(WeekdayName(Weekday(Now)), 3))
-
-Dim assigned_t As Variant
-Dim assigned_d As Variant
-
-Dim x As String, d As String
-Dim wk As Workbook
-
-Dim lang() As String
+j = 0
 
 For j = 2 To langlast
+    With ThisWorkbook.Sheets("Language")
+    ' check to give only ops files if the requesting person is not eligible for QC
+        If .Cells(j, 2) = name And .Cells(j, 4) = "" Then
 
-         If ThisWorkbook.Sheets("Language").Cells(j, 2) = name Then
-         If ThisWorkbook.Sheets("Language").Cells(j, 3) = "UK" Then
-         lang = Split("UK,DE,ES,FR,IT", ",")
-        
-        ThisWorkbook.Sheets("Language").Protect "SpecOps1104"
-        w = Application.WorksheetFunction.RandBetween(1, 10)
-  
-            Set rs = Nothing
-            Set rs = New ADODB.Recordset
-            cnt_File_Ops_Uk = "select count(File_name) as f_cnt from asin_exclusion.Ops_Assgn_Man_UK where Transaction_Date is null and Login_ID is null;"
-            rs.Open cnt_File_Ops_Uk, cn
-            
-            file_cnt_uk = rs![f_cnt]
-            
-            If file_cnt_uk > 0 Then
-                        
-                    assigned_t = TimeValue(Now)
-                    assigned_d = DateValue(Now)
-                    
-                    
-                    ' Getting the file name from the Table
+            'If Dir("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Sachin\AEW\Ops\Assigning\UK\") <> "" Then
+            'Need to replace this with the count of eligible files that needs to be assigned from Database table for Ops_UK table
+                ' trying to lock the tables to eliminate the incident of 2 requests to the datatable to find the count
                 Set rs = Nothing
                 Set rs = New ADODB.Recordset
                 lock_tbl = "LOCK TABLE asin_exclusion.Ops_Assgn_Man_UK WRITE;"
                 rs.Open lock_tbl, cn
-              
-                Set rs = Nothing
-                Set rs = New ADODB.Recordset
-                Get_fn = "select File_name as fn, ID from asin_exclusion.Ops_Assgn_Man_UK where Transaction_Date is null and Login_ID is null limit 1"
-                rs.Open Get_fn, cn
-              
-                file_name = rs![fn]
-                ID_1 = rs![ID]
-              
-                Set rs = Nothing
-                Set rs = New ADODB.Recordset
-                Update_ID = "update asin_exclusion.Ops_Assgn_Man_UK set Transaction_Date = STR_TO_DATE('" & Date_1 & "', '%m/%d/%Y'), Login_ID = '" & name & "' where ID ='" & ID_1 & "';"
-                rs.Open Update_ID, cn
-                                
-                Set rs = Nothing
-                Set rs = New ADODB.Recordset
-                ulk_tbls = "UNLOCK TABLES;"
-                rs.Open ulk_tbls, cn
-                    
-                        Application.EnableEvents = False
-                        Application.Wait (Now() + TimeValue("00:00:0" & w))
-                            
-                        ' exctracting the file that we got above into the desktop of the requester
-                         
-                        'Move the file
-                        str7ZipPath = "\\ant\dept-as\HYD11\Localization\Exclusions\Source\7z.exe"
-                        src_zip = "\\ant\dept-as\HYD11\Localization\Exclusions\Source\Ops_Asgn_UK.7z"
-                        strPassword = "Test1234"
-                        'dest_fol = "C:\Users\" & name & "\Desktop\Download" - using dest_path which is defined above
 
-                        File_to_Move = file_name
 
-                        cmd_ex_1_file = str7ZipPath & " e " & src_zip & " -p" & strPassword & " -o""" & dest_path & """ """ & File_to_Move & """"
-                        'Debug.Print cmd_ex_1_file
-                        Shell cmd_ex_1_file, vbHide
-
-                        
-                        Application.Wait (Now() + TimeValue("00:00:15"))
-                        Set wk = Workbooks.Open(filename:=dest_path & file_name, ReadOnly:=True, UpdateLinks:=False)
-
-'
-                        lastrow = wk.Sheets("Sheet1").Cells(wk.Sheets("Sheet1").Rows.count, 1).End(xlUp).Row
-                        
-                        lastcol = wk.Sheets("Sheet1").Cells(1, wk.Sheets("Sheet1").Columns.count).End(xlToLeft).Column
-                    
-                        Application.EnableEvents = True
-                        
-                        'Moving file to ops' local drive
-                        filename = wk.FullName
-                        fname = wk.name
-                        'wk.Save
-                        wk.Close False
-                        'Name path & d As dest_path & d
-                        GoTo finish
-
-            Else:
-            GoTo finish
-            End If
-        
-        ElseIf ThisWorkbook.Sheets("Language").Cells(j, 3) = "ES" Then
-        lang = Split("ES,UK,FR,IT,DE", ",")
-        ElseIf ThisWorkbook.Sheets("Language").Cells(j, 3) = "FR" Then
-        lang = Split("FR,UK,IT,DE,ES", ",")
-        ElseIf ThisWorkbook.Sheets("Language").Cells(j, 3) = "IT" Then
-        lang = Split("IT,UK,FR,ES,DE", ",")
-        ElseIf ThisWorkbook.Sheets("Language").Cells(j, 3) = "DE" Then
-        lang = Split("DE,UK,FR,IT,ES", ",")
-        Else: End If
-        Else: End If
-        
-Next j
-
-ThisWorkbook.Sheets("Language").Protect "SpecOps1104"
-
-'x = "*.xlsm"
-'src_path = "\\ant\dept-as\Hyd11\Localization\Exclusions\1_Sachin\AEW\Ops\Assigning\"
-'src_path = "\\ant\dept-as\Hyd11\Localization\Exclusions\1_Srinivas\AEW\Ops\Assigning\"
-'d = Dir(src_path & lang(0) & "\" & x)
-'path = src_path & lang(0) & "\"
-
- w = Application.WorksheetFunction.RandBetween(1, 10)
-
-For mp = 0 To 4
-
-    Mp_pref = lang(mp)
-
-    
             Set rs = Nothing
             Set rs = New ADODB.Recordset
-            cnt_File_Ops = "select count(File_name) as f_cnt from asin_exclusion.Ops_Assgn_Man_" & Mp_pref & " where Transaction_Date is null and Login_ID is null;"
-            rs.Open cnt_File_Ops, cn
-            
-            file_cnt = rs![f_cnt]
-            
-            If file_cnt > 0 Then
-                        
-                    assigned_t = TimeValue(Now)
-                    assigned_d = DateValue(Now)
-            
-                    ' Getting the file name from the Table
-                Set rs = Nothing
-                Set rs = New ADODB.Recordset
-                lock_tbl = "LOCK TABLE asin_exclusion.Ops_Assgn_Man_" & Mp_pref & " WRITE;"
-                rs.Open lock_tbl, cn
-              
-                Set rs = Nothing
-                Set rs = New ADODB.Recordset
-                Get_fn = "select File_name as fn, ID from asin_exclusion.Ops_Assgn_Man_" & Mp_pref & " where Transaction_Date is null and Login_ID is null limit 1"
-                rs.Open Get_fn, cn
-              
-                file_name = rs![fn]
-                ID_1 = rs![ID]
-              
-                Set rs = Nothing
-                Set rs = New ADODB.Recordset
-                Update_ID = "update asin_exclusion.Ops_Assgn_Man_" & Mp_pref & " set Transaction_Date = STR_TO_DATE('" & Date_1 & "', '%m/%d/%Y'), Login_ID = '" & name & "' where ID ='" & ID_1 & "';"
-                rs.Open Update_ID, cn
-                                
+            cnt_File_Ops_Uk = "select count(File_name) as f_cnt from asin_exclusion.Ops_Assgn_Man_UK where Transaction_Date is null and Login_ID is null;"
+            rs.Open cnt_File_Ops_Uk, cn
+
+            file_cnt_uk = rs![f_cnt]
+
                 Set rs = Nothing
                 Set rs = New ADODB.Recordset
                 ulk_tbls = "UNLOCK TABLES;"
                 rs.Open ulk_tbls, cn
-                    
-                        Application.EnableEvents = False
-                        Application.Wait (Now() + TimeValue("00:00:0" & w))
-                            
-                        ' exctracting the file that we got above into the desktop of the requester
-                         
-                        'Move the file
-                        str7ZipPath = "\\ant\dept-as\HYD11\Localization\Exclusions\Source\7z.exe"
-                        src_zip = "\\ant\dept-as\HYD11\Localization\Exclusions\Source\Ops_Asgn_" & Mp_pref & ".7z"
-                        strPassword = "Test1234"
-                        'dest_fol = "C:\Users\" & name & "\Desktop\Download" - using dest_path which is defined above
 
-                        File_to_Move = file_name
+            If file_cnt_uk > 0 Then
 
-                        cmd_ex_1_file = str7ZipPath & " e " & src_zip & " -p" & strPassword & " -o""" & dest_path & """ """ & File_to_Move & """"
-                        'Debug.Print cmd_ex_1_file
-                        Shell cmd_ex_1_file, vbHide
+           ' If Dir("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\AEW\Ops\Assigning\UK") <> "" Then
 
-                        
-                        
-                        Application.Wait (Now() + TimeValue("00:00:15"))
-                        Set wk = Workbooks.Open(filename:=dest_path & file_name, ReadOnly:=True, UpdateLinks:=False)
+                Call GetMyFile_Ops
+                GoTo final
+            Else
+                MsgBox ("There are no UK Ops files available to download!!")
+            End If
+        End If
+    End With
 
-                       lastrow = wk.Sheets("Sheet1").Cells(wk.Sheets("Sheet1").Rows.count, 1).End(xlUp).Row
-                        
-                        lastcol = wk.Sheets("Sheet1").Cells(1, wk.Sheets("Sheet1").Columns.count).End(xlToLeft).Column
-                        Application.EnableEvents = True
-                        'Moving file to ops' local drive
-                        filename = wk.FullName
-                        fname = wk.name
-                        'wk.Save
-                        wk.Close False
-                        'Name path & d As dest_path & d
-                        GoTo finish
-    
-           End If
+Next
 
-Next mp
- 
-finish:
 
-'Message in case there are no files available
-If lastrow = 0 Then
-Call GetMyFile_QC
-trk.Save
-trk.Close
+For j = 2 To langlast
+
+With ThisWorkbook.Sheets("Language")
+' check to give Automated QC files if the requesting person is eligible for QC (A)
+    If .Cells(j, 2) = name And .Cells(j, 4) = "A" Then
+
+        'Need to replace this with the count of eligible files that needs to be assigned from Database table for QC_UK table
+        'If Dir("\\ant\dept-as\Hyd11\Localization\Exclusions\1_Sachin\AEW\QC\QC Assigning_automated\UK\") <> "" Then
+
+        Set rs = Nothing
+        Set rs = New ADODB.Recordset
+        cnt_File_QC_Aut_Uk = "select count(File_name) as f_cnt from asin_exclusion.qc_assgn_auto_uk where Transaction_Date is null and Login_ID is null;"
+        rs.Open cnt_File_QC_Aut_Uk, cn
+
+        file_cnt_QC_Aut_uk = rs![f_cnt]
+
+        If file_cnt_QC_Aut_uk > 0 Then
+
+       ' If Dir("\\ant\dept-as\HYD11\Localization\Exclusions\1_Srinivas\AEW\QC\QC Assigning_automated\UK\") <> "" Then
+
+        Call GetMyFile_QC
+        GoTo final
+        Else
+        MsgBox ("There are no automated files available to download!")
+        ThisWorkbook.Save
+        End If
+    End If
+End With
+
+Next
+
+'calculates time difference between recent ops upload file and qc upload file with current time
+curtime = TimeValue(Now)
+curdate = DateValue(Now)
+
+opsdiffd = curdate - rec_up_date_OPs
+opsdifft = Minute(curtime - rec_up_time_OPs)
+qcdiffd = (curdate - rec_up_date_QC)
+qcdifft = Minute(curtime - rec_up_time_QC)
+
+
+If opsdiffd = qcdiffd Then
+
+    If rec_up_time_OPs > rec_up_time_QC Then
+
+        recfile = "OPs"
+        Else
+        recfile = "QC"
+    End If
+
+
+
+ElseIf opsdiffd > qcdiffd Then
+recfile = "QC"
+Else: recfile = "OPs"
+End If
+
+
+If recfile = "QC" Then
+'download ops file for the associate
+Call GetMyFile_Ops
 GoTo final
-Else: End If
+End If
 
-
-If newlast <> 0 Then
-newlast = newlast + 1
-Else: End If
-
-trk.Sheets("Upload").Unprotect "Prod1104"
-trk.Sheets("Assign").Unprotect "Prod1104"
-trk.Sheets("File Record").Unprotect "Prod1104"
-trk.Sheets("Sheet3").Unprotect "Prod1104"
-
-trk.Sheets("Assign").Cells(newlast, 1) = name
-'trk.Sheets("Assign").Cells(newlast, 2) = filename 'Right(filename, InStrRev(filename, "\Test\"))
-trk.Sheets("Assign").Cells(newlast, 3) = fname 'Right(filename, InStrRev(filename, "\Test\"))
-trk.Sheets("Assign").Cells(newlast, 4) = (lastrow - 1)
-trk.Sheets("Assign").Cells(newlast, 5) = assigned_d
-trk.Sheets("Assign").Cells(newlast, 6) = Format(assigned_t, "hh:mm:ss")
-trk.Sheets("Assign").Cells(newlast, 7) = 0
-trk.Sheets("Assign").Cells(newlast, 8) = "Assigned"
-
-
-trk.Sheets("Upload").Protect "Prod1104"
-trk.Sheets("Assign").Protect "Prod1104"
-trk.Sheets("File Record").Protect "Prod1104"
-trk.Sheets("Sheet3").Protect "Prod1104"
-
-trk.Save
-trk.Close
-
-MsgBox "Congrats! You've got your new OPs file named " & file_name & " for the day!"
+If recfile = "OPs" Then
+'download QC file for the associate
+Call GetMyFile_QC
+GoTo final
+End If
 
 final:
 
-Application.DisplayAlerts = True
+    Application.AskToUpdateLinks = True
+    Application.DisplayAlerts = True
 
 End Sub
